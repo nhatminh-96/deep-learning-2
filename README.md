@@ -19,3 +19,15 @@ Optional arguments:
 Example of running code with full optional arguments:
 
 ```python RBM.py --digit 6 10 --iter 800 --nb_img 5```
+
+# Running DBN
+
+Run DBN code with
+
+``` python DBN.py ```
+
+Optional arguments: Same as RBM
+
+Example of running code with full optional arguments:
+
+```python DBN.py --digit 6 10 --iter 800 --nb_img 5```
