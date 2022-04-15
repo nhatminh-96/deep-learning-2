@@ -155,6 +155,7 @@ class RBM():
             approximated_data = self.sortie_entree_RBM(hidden)
             error = np.linalg.norm(x_copy - approximated_data, ord='fro')**2 / x_copy.size
         print('End Training')
+        print("--------------")
 
 
     def generate_image(self, nb_images, nb_iteration):
@@ -182,11 +183,11 @@ class RBM():
                 input = (np.random.uniform(size = p) < self.sortie_entree_RBM(h)).astype('float')
 
             output =  np.reshape(input, (20, 16))
-            plt.imshow(output, cmap = 'gray')
-            plt.title(f'Generated images {i+1}')
-            plt.show()
+            #plt.imshow(output, cmap = 'gray')
+            #plt.title(f'Generated images {i+1}')
+            #plt.show()
 
-            #plt.imsave(f"image-{i}.png", output, cmap ='gray')
+            plt.imsave(f"image-{i}.png", output, cmap ='gray')
             #plt.close()
         print(f"Generated {nb_images} images")
 
