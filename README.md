@@ -1,7 +1,7 @@
-# deep-learning-2
-This repo is the work for  the project of course Deep Learning 2.
+# Deep Learning 2 Course Project
+This repo is the work for the project of course Deep Learning 2.
 
-Implementation of RBM, DBN, DNN, VAE.
+Implementation of RBM, DBN, DNN, VAE and experiment on Binary Alpha Digit and MNIST dataset. 
 
 # Running RBM
 Run RBM code with
