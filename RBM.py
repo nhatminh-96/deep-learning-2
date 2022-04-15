@@ -3,14 +3,13 @@ import matplotlib.pyplot as plt
 import scipy.io as scio
 from tqdm import tqdm
 import argparse
+from PIL import Image
 
 def arg_parse():
     parser = argparse.ArgumentParser()
-    #group = parser.add_mutually_exclusive_group(required=True)
-    #group.add_argument('--pretrain', help='pretrain node2vec embeddings', action="store_true")
-    #group.add_argument('--train_clf', help='train classifier and generate submission', action="store_true")
-    parser.add_argument('--digit', help='which digit/letter to learn, must be a list', type=list, default=[3])
+    parser.add_argument('--digit', nargs="+", help='which digit/letter to learn, must be a list', type=int, default=[3])
     parser.add_argument('--iter', help='number of iteration to train', type=int, default = 1000)
+    parser.add_argument('--nb_img', help='number of images to generate', type=int, default = 3)
     args = parser.parse_args()
     return args
 
@@ -186,7 +185,10 @@ class RBM():
             plt.imshow(output, cmap = 'gray')
             plt.title(f'Generated images {i+1}')
             plt.show()
-            print(f"Generated {nb_images} images")
+
+            #plt.imsave(f"image-{i}.png", output, cmap ='gray')
+            #plt.close()
+        print(f"Generated {nb_images} images")
 
     def display(self):
         print(self.W, self.a, self.b)
@@ -194,11 +196,11 @@ class RBM():
 
 if __name__ == '__main__':
     args = arg_parse()
-    mat_contents = scio.loadmat('./Data/binaryalphadigs.mat')
+    mat_contents = scio.loadmat('./data/binaryalphadigs.mat')
     x = lire_alpha_digit(mat_contents['dat'], args.digit)
     iteration = args.iter
     lr = 0.1
     batch_size = 3
     rbm = RBM(320, 200)
     rbm.fit( x, iteration, lr, batch_size)
-    rbm.generate_image(3, 500)
+    rbm.generate_image(args.nb_img ,  500)
