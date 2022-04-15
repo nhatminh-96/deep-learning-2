@@ -10,7 +10,7 @@ Run RBM code with
 
 Optional arguments:
 ```
---digit: list of digits/letters that RBM structure will learn. Values of elements in range [0, 35]. Example: --digit 3 5 7. Default [3]
+--digit: list of digits/letters that RBM structure will learn. Value of elements in range [0, 35]. Example: --digit 3 5 7. Default [3]
 
 --iter: number of training iteration. Default 1000.
 
