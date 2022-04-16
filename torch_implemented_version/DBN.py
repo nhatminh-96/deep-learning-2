@@ -2,7 +2,7 @@ import argparse
 
 import numpy as np
 import scipy.io as scio
-from RBM_new import RBM
+from RBM import RBM
 from RBM import lire_alpha_digit
 from pathlib import Path
 import torch
