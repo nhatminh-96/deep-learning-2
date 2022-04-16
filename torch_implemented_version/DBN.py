@@ -78,14 +78,11 @@ class DBN():
         return output
 
 
-
-
-
 if __name__ == '__main__':
     args = arg_parse()
     mat_contents = scio.loadmat('./data/binaryalphadigs.mat')
     x = lire_alpha_digit(mat_contents['dat'], args.digit)
-    x_tensor = torch.from_numpy(x).float() 
+    x_tensor = torch.from_numpy(x).to(device).float() 
     epochs = args.iter
     lr = 0.1
     batch_size = 3
