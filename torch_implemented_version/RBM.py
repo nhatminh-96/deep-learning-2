@@ -5,6 +5,7 @@ import scipy.io as scio
 from tqdm import tqdm
 import argparse
 from pathlib import Path
+import utils
 
 
 import torch
@@ -201,15 +202,6 @@ class RBM():
     def display(self):
         print(self.W, self.a, self.b)
 
-def visual_images(list_images):
-    nb_imgs = len(list_images)
-    # 5 images each column
-    nb_columns = 5 if nb_imgs >= 5 else nb_imgs
-    nb_rows = nb_imgs//5 + 1 if nb_imgs%5 != 0 else nb_imgs//5
-    fig, axs = plt.subplots(nb_rows, nb_columns, figsize=(2*nb_columns, 2*nb_rows))
-    for image, ax in zip(list_images, axs.flatten()):
-        ax.imshow(image, cmap='gray')
-        ax.axis('off')
 if __name__ == '__main__':
     args = arg_parse()
     mat_contents = scio.loadmat(data_path)
@@ -225,7 +217,7 @@ if __name__ == '__main__':
     generated_images = rbm.generate_image(3 ,  12)
     
     # if args.show_img:
-    #     visual_images(generated_images)
+    #     utils.visual_images(generated_images)
 
     if args.save_img:
         if experiment_path.is_dir() == False:
