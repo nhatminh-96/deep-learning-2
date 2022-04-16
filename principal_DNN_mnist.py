@@ -101,13 +101,15 @@ def entre_sortie_reseau(DNN_, input):
 
 def retropropagation(DNN_, input, label, epochs, lr, batch_size):
     tracking = []
-    with tqdm(total = epochs, unit_scale=True, postfix={'Erreur ':0.0}, ncols=100) as pbar:
+    #DNN_.classification_head.W = torch.from_numpy(DNN_.classification_head.W).to(device)
+    #DNN_.classification_head.b = torch.from_numpy(DNN_.classification_head.b).to(device)
+    label = torch.from_numpy(label).to(device)
+    with tqdm(total = epochs, unit_scale=True, postfix={'loss ':0.0}, ncols=100) as pbar:
         for epoch in range(epochs):
             idx_ = np.random.permutation(input.shape[0])
             input = input[idx_]
             label = label[idx_]
             #input = torch.from_numpy(input).to(device)
-            label = torch.from_numpy(label).to(device)
             for i in range(0, input.shape[0] - batch_size, batch_size):
                 input_batch = input[i:(i+batch_size),]
                 label_batch = label[i:(i+batch_size),]
@@ -122,6 +124,8 @@ def retropropagation(DNN_, input, label, epochs, lr, batch_size):
                 x_i_1 = torch.from_numpy(x_i_1).to(device)
                 gradients_['W_last'] = torch.matmul(x_i_1.T, dxi_1)
                 gradients_['b_last'] = torch.mean(dxi_1, axis=0)
+                gradients_['W_last'] = gradients_['W_last'].to('cpu').detach().numpy()
+                gradients_['b_last'] = gradients_['b_last'].to('cpu').detach().numpy()
         
                 dxi1 = dxi_1
                 for i in range(DNN_.nb_layers):
@@ -144,10 +148,16 @@ def retropropagation(DNN_, input, label, epochs, lr, batch_size):
                     dx_i = torch.mul(torch.matmul(dxi1, W_i1.T), multi)
                     dxi1 = dx_i
 
-                    x_i_1 = torch.from_numpy(x_i_1).to(device)
+                    #x_i_1 = torch.from_numpy(x_i_1).to(device)
+                    dx_i = dx_i.to('cpu').detach().numpy()
+                    #print(dx_i.shape)
+                    #print(x_i_1.shape)
+                    #mat_product = x_i_1.T @ dx_i
+                    #dx_i = torch.from_numpy(dx_i).to(device)
+                    #mat_product = torch.from_numpy(mat_product).to(device)
                     gradients_['W_'+str(idx)] = x_i_1.T @ dx_i
-                    gradients_['b_'+str(idx)] = torch.mean(dx_i, axis=0)
-        
+                    gradients_['b_'+str(idx)] = np.mean(dx_i, axis=0)
+                #print(gradients_['W_last'].shape)
                 DNN_.classification_head.W = DNN_.classification_head.W - lr*gradients_['W_last']
                 DNN_.classification_head.b = DNN_.classification_head.b - lr*gradients_['b_last']
                 for i in range(DNN_.nb_layers):
@@ -155,8 +165,9 @@ def retropropagation(DNN_, input, label, epochs, lr, batch_size):
                     DNN_.DNN[i].b = DNN_.DNN[i].b - lr*gradients_['b_'+str(i)]
     
             y_hat = entre_sortie_reseau(DNN_, input)[-1]
-            l = -np.sum(label*np.log(y_hat))/y_hat.shape[0]
-            pbar.set_postfix({'Erreur ':l})
+            l = -torch.sum(label*torch.log(y_hat))/y_hat.shape[0]
+            loss_cpu = l.to('cpu').detach().numpy()
+            pbar.set_postfix({'loss ':f"{loss_cpu:.5f}"})
             pbar.update(1)
             tracking.append(l)
             #print(f'The Loss at Epoch : {epoch} is {l}')

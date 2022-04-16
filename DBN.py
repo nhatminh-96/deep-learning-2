@@ -26,6 +26,7 @@ class DNN():
         self.nb_layers = len(hidden_dims_)
         self.dim_input = p
         self.dim_output = q
+        
 
         # Construct DNN as chain of DBMs
         temp_dim_input = p
