@@ -34,4 +34,4 @@ Optional arguments: Same as RBM
 
 Example of running code with full optional arguments:
 
-```python DBN.py --digit 6 10 --iter 800 --nb_img 5 --show_img --save_img```
+```python DBN.py --digit 6 10 --iter 10 --nb_img 5 --show_img --save_img```
