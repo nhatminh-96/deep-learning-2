@@ -1,15 +1,23 @@
+from ast import arg
+import imp
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as scio
 from tqdm import tqdm
 import argparse
-from PIL import Image
+from pathlib import Path
+
+ORI = Path(".")
+experiment_path = ORI / "experiments" / "RBM"
+data_path = ORI / 'data/binaryalphadigs.mat'
 
 def arg_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--digit', nargs="+", help='which digit/letter to learn, must be a list', type=int, default=[3])
     parser.add_argument('--iter', help='number of iteration to train', type=int, default = 1000)
     parser.add_argument('--nb_img', help='number of images to generate', type=int, default = 3)
+    parser.add_argument('--show_img', help='showing generated images', action ='store_true')
+    parser.add_argument('--save_img', help='saving generated images', action ='store_true')
     args = parser.parse_args()
     return args
 
@@ -173,7 +181,7 @@ class RBM():
                     The number of iterations used during the generation
 
         """
-
+        imgs = []
         p,q = self.W.shape
         for i in range(nb_images):
             input = (np.random.uniform(size=p) < 0.5).astype('float')
@@ -183,25 +191,40 @@ class RBM():
                 input = (np.random.uniform(size = p) < self.sortie_entree_RBM(h)).astype('float')
 
             output =  np.reshape(input, (20, 16))
-            #plt.imshow(output, cmap = 'gray')
-            #plt.title(f'Generated images {i+1}')
-            #plt.show()
-
-            plt.imsave(f"image-{i}.png", output, cmap ='gray')
-            #plt.close()
+            imgs.append(output)
         print(f"Generated {nb_images} images")
+        return imgs
 
     def display(self):
         print(self.W, self.a, self.b)
 
+def visual_images(list_images):
+    nb_imgs = len(list_images)
+    # 5 images each column
+    nb_columns = 5 if nb_imgs >= 5 else nb_imgs
+    nb_rows = nb_imgs//5 + 1 if nb_imgs%5 != 0 else nb_imgs//5
+    fig, axs = plt.subplots(nb_rows, nb_columns, figsize=(2*nb_columns, 2*nb_rows))
+    for image, ax in zip(list_images, axs.flatten()):
+        ax.imshow(image, cmap='gray')
+        ax.axis('off')
 
 if __name__ == '__main__':
     args = arg_parse()
-    mat_contents = scio.loadmat('./data/binaryalphadigs.mat')
+    mat_contents = scio.loadmat(data_path)
     x = lire_alpha_digit(mat_contents['dat'], args.digit)
-    iteration = args.iter
+    epochs = args.iter
     lr = 0.1
     batch_size = 3
     rbm = RBM(320, 200)
-    rbm.fit( x, iteration, lr, batch_size)
-    rbm.generate_image(args.nb_img ,  500)
+    rbm.fit( x, epochs, lr, batch_size)
+    generated_images = rbm.generate_image(args.nb_img ,  500)
+    
+    if args.show_img:
+        visual_images(generated_images)
+
+    if args.save_img:
+        if experiment_path.is_dir() == False:
+            experiment_path.mkdir(parents=True, exist_ok=True)
+        for i in range(args.nb_img):
+            plt.imsave( experiment_path / f"image_RBM-{epochs}-epochs-{i}.png", generated_images[i], cmap ='gray')
+        print(f"Saved {args.nb_img} images")

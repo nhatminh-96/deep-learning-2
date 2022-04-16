@@ -1,13 +1,19 @@
 import numpy as np
 import scipy.io as scio
 from RBM import *
-from sklearn.metrics import accuracy_score
+from pathlib import Path
+
+ORI = Path(".")
+experiment_path = ORI / "experiments" / "DBN"
+data_path = ORI / 'data/binaryalphadigs.mat'
 
 def arg_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--digit', nargs="+", help='which digit/letter to learn, must be a list', type=int, default=[3])
     parser.add_argument('--iter', help='number of iteration to train', type=int, default = 1000)
     parser.add_argument('--nb_img', help='number of images to generate', type=int, default = 3)
+    parser.add_argument('--show_img', help='showing generated images', action ='store_true')
+    parser.add_argument('--save_img', help='saving generated images', action ='store_true')
     args = parser.parse_args()
     return args
 
@@ -46,7 +52,7 @@ class DNN():
                 out_ = self.DNN[idx_layer].sortie_entree_RBM(out_)
         return out_
     
-    def generer_image_DBN(self, nb_image, iterations, nb_epochs):
+    def generer_image_DBN(self, nb_image, iterations):
         output = []
         for i in range(nb_image):
             input_init = np.random.rand(1, self.dim_input)
@@ -54,10 +60,19 @@ class DNN():
             generated_image =  np.reshape(generated_image, (20, 16))
             generated_image = np.round(generated_image)
             output.append(generated_image)
-            plt.imsave(f"image_dbn-{nb_epochs}-epochs-{i}.png", generated_image, cmap ='gray')
+            
         print(f"Generated {nb_image} images.")
         return output
 
+def visual_images(list_images):
+    nb_imgs = len(list_images)
+    # 5 images each column
+    nb_columns = 5 if nb_imgs >= 5 else nb_imgs
+    nb_rows = nb_imgs//5 + 1 if nb_imgs%5 != 0 else nb_imgs//5
+    fig, axs = plt.subplots(nb_rows, nb_columns, figsize=(2*nb_columns, 2*nb_rows))
+    for image, ax in zip(list_images, axs.flatten()):
+        ax.imshow(image, cmap='gray')
+        ax.axis('off')
 
 if __name__ == '__main__':
     args = arg_parse()
@@ -68,4 +83,14 @@ if __name__ == '__main__':
     batch_size = 3
     dnn = DNN(320, 100, [100, 200, 200, 100] )
     dnn.pretrain_DNN(x, epochs, lr, batch_size)
-    generated = dnn.generer_image_DBN(args.nb_img , 500, epochs)
+    generated_images = dnn.generer_image_DBN(args.nb_img , 500)
+
+    if args.show_img:
+        visual_images(generated_images)
+
+    if args.save_img:
+        if experiment_path.is_dir() == False:
+            experiment_path.mkdir(parents=True, exist_ok=True)
+        for i in range(args.nb_img):
+            plt.imsave( experiment_path / f"image_DBN-{epochs}-epochs-{i}.png", generated_images[i], cmap ='gray')
+        print(f"Saved {args.nb_img} images")
