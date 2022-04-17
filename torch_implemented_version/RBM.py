@@ -64,7 +64,8 @@ class RBM():
 
     def __init__(self, p, q, device=device):
         self.device = device
-        self.W = torch.rand(p, q).to(self.device).float() # random initialization with distribution N(0, 0.01)
+        temp_W = np.random.normal(0, 0.01, (p, q))
+        self.W = torch.from_numpy(temp_W).to(self.device).float() # random initialization with distribution N(0, 0.01)
         self.a = torch.zeros(1, p).to(self.device).float()
         self.b = torch.zeros(1, q).to(self.device).float()
     
@@ -80,8 +81,9 @@ class RBM():
                     Our data
         """
         # data_ = data.to(self.device)
-        z = data @ self.W # + self.b.view(-1, self.W.shape[1])
-        hidden = torch.sigmoid(z)
+        #z = data @ self.W + self.b
+        #hidden = torch.sigmoid(z)
+        hidden = 1. / (1. + torch.exp(-self.b.reshape(1,-1) - data @ self.W ))
         return hidden
 
     def sortie_entree_RBM(self, data):
@@ -97,8 +99,9 @@ class RBM():
                     Our data
 
         """
-        z = torch.mm(data, self.W.T) + self.a
-        visible = torch.sigmoid(z)
+        # z = torch.mm(data, self.W.T) + self.a
+        # visible = torch.sigmoid(z)
+        visible = 1. / (1. + torch.exp(- self.a.reshape(1,-1) - data @ self.W.T))
         return visible
     
     def update(self, val_update):
@@ -146,7 +149,7 @@ class RBM():
         for i in tqdm(range(iteration)):
             x_copy = torch.clone(x)
             # shuflle
-            t = torch.rand(4, 2, 3, 3)
+            #t = torch.rand(4, 2, 3, 3)
             idx = torch.randperm(x_copy.shape[0])
             x_copy = x_copy[idx].view(x_copy.size())
 

@@ -11,8 +11,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 ORI = Path(".")
 
-#(x_train, y_train), (x_test, y_test) = mnist.load()
-
 def arg_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--digit', nargs="+", help='which digit/letter to learn, must be a list', type=int, default=[3])
@@ -73,6 +71,8 @@ class DNN():
         return output
 
 def calcul_softmax(RBM_, input):
+        #W = torch.from_numpy(RBM_.W).to(device)
+        #b = torch.from_numpy(RBM_.b).to(device)
         W = RBM_.W
         b = RBM_.b
         #input = torch.from_numpy(input)
@@ -83,7 +83,8 @@ def calcul_softmax(RBM_, input):
         
         #RBM_out = input @ W + b
         #print(RBM_out.shape)
-        temp = torch.exp(RBM_out- torch.max(RBM_out, axis=1)[0][:,None])
+        #temp = torch.exp(RBM_out- torch.max(RBM_out, axis=1)[0][:,None])
+        temp = torch.exp(RBM_out)
         temp_sum = torch.sum(temp, axis=1)
         softmax = temp/temp_sum[:, None]
         return softmax
@@ -104,26 +105,27 @@ def retropropagation(DNN_, input, label, epochs, lr, batch_size):
     tracking = []
     input = torch.from_numpy(input).to(device).float()
     label = torch.from_numpy(label).to(device).float()
-    print(label)
     with tqdm(total = epochs, unit_scale=True, postfix={'loss ':0.0}, ncols=100) as pbar:
         for epoch in range(epochs):
-            idx_ = np.random.permutation(input.shape[0])
+            #idx_ = np.random.permutation(input.shape[0])
+            idx_ = torch.randperm(input.shape[0])
             input = input[idx_]
             label = label[idx_]
-
             for i in range(0, input.shape[0] - batch_size, batch_size):
                 input_batch = input[i:(i+batch_size),]
                 label_batch = label[i:(i+batch_size),]
                 out_DNN = entre_sortie_reseau(DNN_, input_batch)
                 y_hat = out_DNN[-1]
+                #print(y_hat)
         
                 gradients_ = {}
         
                 dxi_1 = y_hat - label_batch
                 x_i_1 = out_DNN[-2]
+
+                #x_i_1 = torch.from_numpy(x_i_1).to(device)
                 gradients_['W_last'] = torch.matmul(x_i_1.T, dxi_1)
                 gradients_['b_last'] = torch.mean(dxi_1, axis=0)
-
         
                 dxi1 = dxi_1
                 for j in range(DNN_.nb_layers):
@@ -140,11 +142,22 @@ def retropropagation(DNN_, input, label, epochs, lr, batch_size):
                         W_i1 = DNN_.DNN[idx+1].W
                     else:
                         W_i1 = DNN_.classification_head.W
+                    # W_i1 = torch.from_numpy(W_i1).to(device)
+                    # x_i = torch.from_numpy(x_i).to(device)
                     multi = torch.mul(x_i, (1-x_i))
                     dx_i = torch.mul(torch.matmul(dxi1, W_i1.T), multi)
                     dxi1 = dx_i
+
+                    #x_i_1 = torch.from_numpy(x_i_1).to(device)
+                    #dx_i = dx_i.to('cpu').detach().numpy()
+                    #print(dx_i.shape)
+                    #print(x_i_1.shape)
+                    #mat_product = x_i_1.T @ dx_i
+                    #dx_i = torch.from_numpy(dx_i).to(device)
+                    #mat_product = torch.from_numpy(mat_product).to(device)
                     gradients_['W_'+str(idx)] = x_i_1.T @ dx_i
                     gradients_['b_'+str(idx)] = torch.mean(dx_i, axis=0)
+                #print(gradients_['W_last'].shape)
                 DNN_.classification_head.W = DNN_.classification_head.W - lr*gradients_['W_last']
                 DNN_.classification_head.b = DNN_.classification_head.b - lr*gradients_['b_last']
                 for k in range(DNN_.nb_layers):
@@ -152,9 +165,8 @@ def retropropagation(DNN_, input, label, epochs, lr, batch_size):
                     DNN_.DNN[k].b = DNN_.DNN[k].b - lr*gradients_['b_'+str(k)]
     
             y_hat = entre_sortie_reseau(DNN_, input)[-1]
-            print(torch.log(y_hat))
+            #print(y_hat)
             l = -torch.sum(label*torch.log(y_hat))/y_hat.shape[0]
-            #print(l)
             loss_cpu = l.to('cpu').detach().numpy()
             pbar.set_postfix({'loss ':f"{loss_cpu:.5f}"})
             pbar.update(1)
@@ -165,7 +177,6 @@ def retropropagation(DNN_, input, label, epochs, lr, batch_size):
 
 def test_DNN(DNN_, X, Y):
     X = torch.from_numpy(X).to(device).float()
-    Y = torch.from_numpy(Y).to(device).float()
     out = entre_sortie_reseau(DNN_, X)
     y_hat = out[-1]
     y_hat = y_hat.to('cpu').detach().numpy()
