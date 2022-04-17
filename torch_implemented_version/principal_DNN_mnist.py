@@ -43,7 +43,7 @@ class DNN():
         X_train = X
         for i in range(self.nb_layers):
             print(f"Training layer {i}")
-            self.DNN[i].fit(X_train, nb_epoch, lr, batch_size)
+            self.DNN[i].train_rbm(X_train, nb_epoch, lr, batch_size)
             X_train = self.DNN[i].entree_sortie_RBM(X_train)
             #print("\n")
     
@@ -83,8 +83,8 @@ def calcul_softmax(RBM_, input):
         
         #RBM_out = input @ W + b
         #print(RBM_out.shape)
-        #temp = torch.exp(RBM_out- torch.max(RBM_out, axis=1)[0][:,None])
-        temp = torch.exp(RBM_out)
+        temp = torch.exp(RBM_out- torch.max(RBM_out, axis=1)[0][:,None])
+        #temp = torch.exp(RBM_out)
         temp_sum = torch.sum(temp, axis=1)
         softmax = temp/temp_sum[:, None]
         return softmax
@@ -103,8 +103,8 @@ def entre_sortie_reseau(DNN_, input):
 
 def retropropagation(DNN_, input, label, epochs, lr, batch_size):
     tracking = []
-    input = torch.from_numpy(input).to(device).float()
-    label = torch.from_numpy(label).to(device).float()
+    #input = torch.from_numpy(input).to(device).float()
+    #label = torch.from_numpy(label).to(device).float()
     with tqdm(total = epochs, unit_scale=True, postfix={'loss ':0.0}, ncols=100) as pbar:
         for epoch in range(epochs):
             #idx_ = np.random.permutation(input.shape[0])
@@ -176,12 +176,13 @@ def retropropagation(DNN_, input, label, epochs, lr, batch_size):
     return DNN_, tracking
 
 def test_DNN(DNN_, X, Y):
-    X = torch.from_numpy(X).to(device).float()
+    #X = torch.from_numpy(X).to(device).float()
     out = entre_sortie_reseau(DNN_, X)
+    Y = Y.to('cpu').detach().numpy()
     y_hat = out[-1]
     y_hat = y_hat.to('cpu').detach().numpy()
     loss  = -np.sum(Y*np.log(y_hat+1e-9))/y_hat.shape[0]
     y_hat = (y_hat > 0.5)*1
     accuracy = accuracy_score(Y, y_hat)
-    print(f'We have an accuracy of {np.round(accuracy*100,3)}% \n and a entropy loss of {np.round(loss,3)}')
+    print(f'Accuracy: {np.round(accuracy,5)}')
     return loss, accuracy

@@ -121,7 +121,7 @@ class RBM():
         self.b += val_update[2]
         
         
-    def fit(self, x, iteration, lr, batch_size):
+    def train_rbm(self, x, iteration, lr, batch_size):
 
         """
         This function will train our RBM model to correspoding input images x
@@ -142,7 +142,7 @@ class RBM():
             batch_size: int (1,)
                     Batch size in training
         """
-
+        #x = torch.from_numpy(x).to(self.device).float()
         p,q = self.W.shape
         n = x.shape[0]
         print(f"Training Started. {iteration} iterations.")
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     args = arg_parse()
     mat_contents = scio.loadmat(data_path)
     x = lire_alpha_digit(mat_contents['dat'], args.digit)
-    x = torch.from_numpy(x).to(device).float()
+    #x = torch.from_numpy(x).to(device).float()
     epochs = args.iter
     rbm = RBM(320, 200)
     #x = torch.rand(25, 320).to(device).float()

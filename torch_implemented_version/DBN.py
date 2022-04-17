@@ -46,10 +46,10 @@ class DBN():
             temp_dim_input = temp_dim_output
     
     def pretrain_DNN(self, X, nb_epoch, lr, batch_size):
-        X_train = X.to(self.device)
+        X_train = torch.from_numpy(X).to(self.device).float()
         for i in range(self.nb_layers):
             print(f"Training layer {i}")
-            self.DBN[i].fit(X_train, nb_epoch, lr, batch_size)
+            self.DBN[i].train_rbm(X_train, nb_epoch, lr, batch_size)
             X_train = self.DBN[i].entree_sortie_RBM(X_train)
             #print("\n")
     
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     args = arg_parse()
     mat_contents = scio.loadmat('./data/binaryalphadigs.mat')
     x = lire_alpha_digit(mat_contents['dat'], args.digit)
-    x_tensor = torch.from_numpy(x).to(device).float() 
+    #x_tensor = torch.from_numpy(x).to(device).float() 
     epochs = args.iter
     lr = 0.1
     batch_size = 3
