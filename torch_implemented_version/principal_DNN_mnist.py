@@ -185,4 +185,4 @@ def test_DNN(DNN_, X, Y):
     y_hat = (y_hat > 0.5)*1
     accuracy = accuracy_score(Y, y_hat)
     print(f'Accuracy: {np.round(accuracy,5)}')
-    return loss, accuracy
+    return accuracy
