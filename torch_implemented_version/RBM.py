@@ -62,8 +62,10 @@ class RBM():
 
     """
 
-    def __init__(self, p, q, device=device):
+    def __init__(self, p, q, device=device seed=None):
         self.device = device
+        if seed:
+            np.random.seed(50) 
         temp_W = np.random.normal(0, 0.01, (p, q))
         self.W = torch.from_numpy(temp_W).to(self.device).float() # random initialization with distribution N(0, 0.01)
         self.a = torch.zeros(1, p).to(self.device).float()
